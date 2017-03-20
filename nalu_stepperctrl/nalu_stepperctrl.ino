@@ -3,6 +3,9 @@
 
 AutoDriver boardA(0, 10, 6); // Syntax: position, CS pin, reset pin, busy pin
 
+int speed_raw = 256; // Initialize at 50% speed
+int speed_raw_prev = 256; //Initialize at 50% speed
+int speed_act = 150;
 
 void setup() {
   // put your setup code here, to run once:
@@ -26,21 +29,45 @@ void setup() {
   boardA.SPIPortConnect(&SPI);      // Before doing anything else, we need to
   dSPINConfig(); 
 
+  boardA.setMaxSpeed(speed_act);
+  boardA.setFullSpeed(speed_act);
+
   Serial.println("Init complete");
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  Serial.println("Beginning loop");
-  boardA.move(FWD,10000);
-  delay(5000);
-//  while (boardA.busyCheck())
-//  boardA.softStop();
-  boardA.move(REV,10000);
-  delay(5000);
-//  while (boardA.busyCheck())
-//  boardA.softStop();
-  Serial.println("Loop iteration complete");
+  //Measure current desired speed and endpoint positions
 
+  speed_raw = analogRead(A0);
+  if (abs(speed_raw - speed_raw_prev) > 5) {
+    //Difference between previous and current speed setting is sufficient that we know we have signal
+    speed_raw_prev = speed_raw;
+    speed_act = map(speed_raw,64,1024,50,1030); //Appears that 1024 is max achievable speed for 
+    boardA.setMaxSpeed(speed_act);
+    Serial.println(speed_act);
+  }
+  
+  if (speed_act >= 50) {
+    boardA.move(FWD,5000);
+    while (boardA.busyCheck()) {
+      delay(1);
+    }
+    boardA.softStop();
+    boardA.move(REV,5000);
+    while (boardA.busyCheck()) {
+      delay(1);
+    }
+    boardA.softStop();
+    boardA.move(REV,5000);
+    while (boardA.busyCheck()) {
+      delay(1);
+    }
+    //boardA.softStop();
+    boardA.move(FWD,5000);
+    while (boardA.busyCheck()) {
+      delay(1);
+    }
+    boardA.softStop();  
+  }
 }
