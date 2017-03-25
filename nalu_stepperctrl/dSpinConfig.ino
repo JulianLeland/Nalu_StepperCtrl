@@ -15,7 +15,7 @@ void dSPINConfig(void)
   
   
   boardA.setSlewRate(SR_530V_us);   // Upping the edge speed increases torque.
-  boardA.setOCThreshold(OC_3000mA);  // OC threshold 750mA
+  boardA.setOCThreshold(OC_2250mA);  // OC threshold 750mA
 //  boardA.setPWMFreq(PWM_DIV_2, PWM_MUL_2); // 31.25kHz PWM freq
   boardA.setOCShutdown(OC_SD_DISABLE); // don't shutdown on OC
   boardA.setVoltageComp(VS_COMP_DISABLE); // don't compensate for motor V
@@ -27,6 +27,6 @@ void dSPINConfig(void)
                                     //  clock.
   boardA.setAccKVAL(250);           // We'll tinker with these later, if needed.
   boardA.setDecKVAL(250);
-  boardA.setRunKVAL(128);
+  boardA.setRunKVAL(250);
   boardA.setHoldKVAL(64);           // This controls the holding current; keep it low..
 }

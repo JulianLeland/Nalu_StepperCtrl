@@ -1,11 +1,18 @@
 #include <SparkFunAutoDriver.h>
 #include <SPI.h>
 
-AutoDriver boardA(0, 10, 6); // Syntax: position, CS pin, reset pin, busy pin
+AutoDriver boardA(0, 10, 9); // Syntax: position, CS pin, reset pin, busy pin
+
+
 
 int speed_raw = 256; // Initialize at 50% speed
 int speed_raw_prev = 256; //Initialize at 50% speed
 int speed_act = 150;
+
+int toppos_raw = 0;
+int botpos_raw = 0;
+int toppos = 5000;
+int botpos = 5000;
 
 void setup() {
   // put your setup code here, to run once:
@@ -13,15 +20,15 @@ void setup() {
   Serial.println("Beginning init");
   // Start by setting up the pins and the SPI peripheral.
   //  The library doesn't do this for you! 
-  pinMode(6, OUTPUT);
+  pinMode(9, OUTPUT);
   pinMode(MOSI, OUTPUT);
   pinMode(MISO, INPUT);
   pinMode(13, OUTPUT);
   pinMode(10, OUTPUT);
   
   digitalWrite(10, HIGH);
-  digitalWrite(6, LOW);
-  digitalWrite(6, HIGH);
+  digitalWrite(9, LOW);
+  digitalWrite(9, HIGH);
   delay(1000);
   
   SPI.begin();
@@ -39,7 +46,13 @@ void setup() {
 void loop() {
   //Measure current desired speed and endpoint positions
 
-  speed_raw = analogRead(A0);
+  speed_raw = analogRead(A1);
+  toppos_raw = analogRead(A2);
+  botpos_raw = analogRead(A0);
+
+  toppos = map(toppos_raw,64,1024,5000,32000);
+  botpos = map(botpos_raw,64,1024,5000,32000);  
+  
   if (abs(speed_raw - speed_raw_prev) > 5) {
     //Difference between previous and current speed setting is sufficient that we know we have signal
     speed_raw_prev = speed_raw;
@@ -49,22 +62,22 @@ void loop() {
   }
   
   if (speed_act >= 50) {
-    boardA.move(FWD,5000);
+    boardA.move(FWD,toppos);
     while (boardA.busyCheck()) {
       delay(1);
     }
     boardA.softStop();
-    boardA.move(REV,5000);
+    boardA.move(REV,toppos);
     while (boardA.busyCheck()) {
       delay(1);
     }
     boardA.softStop();
-    boardA.move(REV,5000);
+    boardA.move(REV,botpos);
     while (boardA.busyCheck()) {
       delay(1);
     }
     //boardA.softStop();
-    boardA.move(FWD,5000);
+    boardA.move(FWD,botpos);
     while (boardA.busyCheck()) {
       delay(1);
     }
