@@ -3,7 +3,7 @@
 
 AutoDriver boardA(0, 10, 9); // Syntax: position, CS pin, reset pin, busy pin
 
-
+int ustepMode = 128; // Number of microsteps to use
 
 int speed_raw = 256; // Initialize at 50% speed
 int speed_raw_prev = 256; //Initialize at 50% speed
@@ -11,8 +11,8 @@ int speed_act = 150;
 
 int toppos_raw = 0;
 int botpos_raw = 0;
-int toppos = 5000;
-int botpos = 5000;
+int toppos = 5000*(ustepMode/128);
+int botpos = 5000*(ustepMode/128);
 
 void setup() {
   // put your setup code here, to run once:
@@ -34,7 +34,7 @@ void setup() {
   SPI.begin();
   SPI.setDataMode(SPI_MODE3);
   boardA.SPIPortConnect(&SPI);      // Before doing anything else, we need to
-  dSPINConfig(); 
+  dSPINConfig(ustepMode); 
 
   boardA.setMaxSpeed(speed_act);
   boardA.setFullSpeed(speed_act);
@@ -50,11 +50,11 @@ void loop() {
   toppos_raw = analogRead(A2);
   botpos_raw = analogRead(A0);
 
-  toppos = map(toppos_raw,64,1024,5000,32000);
-  botpos = map(botpos_raw,64,1024,5000,32000);  
+  toppos = map(toppos_raw,64,1024,5000,32000)*(ustepMode/128);
+  botpos = map(botpos_raw,64,1024,5000,32000)*(ustepMode/128);  
   
   if (abs(speed_raw - speed_raw_prev) > 5) {
-    //Difference between previous and current speed setting is sufficient that we know we have signal
+    // Difference between previous and current speed setting is sufficient that we know we have signal
     speed_raw_prev = speed_raw;
     speed_act = map(speed_raw,64,1024,50,1030); //Appears that 1024 is max achievable speed for 
     boardA.setMaxSpeed(speed_act);
