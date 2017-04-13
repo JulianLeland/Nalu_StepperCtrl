@@ -33,11 +33,16 @@ void setup() {
   
   SPI.begin();
   SPI.setDataMode(SPI_MODE3);
-  boardA.SPIPortConnect(&SPI);      // Before doing anything else, we need to
-  dSPINConfig(ustepMode); 
+  boardA.SPIPortConnect(&SPI);      // Connect to board via SPI
 
-  boardA.setMaxSpeed(speed_act);
-  boardA.setFullSpeed(speed_act);
+  // Home system
+  dSPINHome(ustepMode);
+  delay(500);
+
+  
+  // Configure for run
+  dSPINConfig(ustepMode); // Run config for run
+  boardA.setMaxSpeed(speed_act); // Set max speed to default
 
   Serial.println("Init complete");
 
@@ -46,41 +51,49 @@ void setup() {
 void loop() {
   //Measure current desired speed and endpoint positions
 
-  speed_raw = analogRead(A1);
-  toppos_raw = analogRead(A2);
-  botpos_raw = analogRead(A0);
+  speed_raw = analogRead(2);
+  toppos_raw = analogRead(1);
+  botpos_raw = analogRead(3);
 
-  toppos = map(toppos_raw,64,1024,5000,20000)*(ustepMode/128);
-  botpos = map(botpos_raw,64,1024,5000,20000)*(ustepMode/128);  
+  toppos = map(toppos_raw,0,1024,5000,20000)*(ustepMode/128);
+  botpos = map(botpos_raw,0,1024,5000,20000)*(ustepMode/128);
   
   if (abs(speed_raw - speed_raw_prev) > 5) {
     // Difference between previous and current speed setting is sufficient that we know we have signal
     speed_raw_prev = speed_raw;
-    speed_act = map(speed_raw,0,1024,10,475); // 1024 is max speed. 500 is max achievable at full range with large stepper
+    speed_act = map(speed_raw,0,1024,20,450); // 1024 is max speed. 500 is max achievable at full range with large stepper
     boardA.setMaxSpeed(speed_act);
-    Serial.println(speed_act);
+
+    delay(1);
+    Serial.print("Top Pos: ");
+    Serial.print(toppos);
+    Serial.print(" | Speed: ");
+    Serial.print(speed_act);
+    Serial.print(" | Bottom Pos: ");
+    Serial.println(botpos);     
   }
+
   
-  if (speed_act >= 50) {
+  if (speed_act >= 75) {
     boardA.move(FWD,toppos);
     while (boardA.busyCheck()) {
       delay(1);
     }
-    boardA.hardStop();
+    boardA.softStop();
     boardA.move(REV,toppos);
     while (boardA.busyCheck()) {
       delay(1);
     }
-    boardA.hardStop();
+    boardA.softStop();
     boardA.move(REV,botpos);
     while (boardA.busyCheck()) {
       delay(1);
     }
-    boardA.hardStop();
+    boardA.softStop();
     boardA.move(FWD,botpos);
     while (boardA.busyCheck()) {
       delay(1);
     }
-    boardA.hardStop();  
+    boardA.softStop();  
   }
 }
